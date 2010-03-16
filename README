@@ -1,0 +1,90 @@
+API Generator for CodeIgniter (APIGen)
+
+About
+=====
+
+This project provides a CodeIgniter library for creating a dynamic, HTTP-based
+server API that can easily handle new API revisions and multiple data formats,
+including JSON and serialized-PHP.
+
+The core library design centers around simplifying the task of creating and
+maintaining multiple API versions, and is meant to be used with URI routes
+similar to the following examples:
+
+  http://your.domain/api/v1/json/module/method
+
+  http://your.domain/api/php/v5/example/action
+
+
+Usage
+=====
+
+You will need to create a controller in your CI project, such as "api.php" and
+then route your preferred URI patterns to the controller so that it can call
+the APIGen library with the correct arguments.
+
+First load the APIGen library, passing the "api_root" parameter to tell the
+library where it can find your actual API controllers:
+
+  $this->load->library("auto_api", array("api_root" => "/path/to/api/"));
+
+The simplest way to generate the URI routing would be to define a single method
+on your controller, and define routes in your configuration to generate the
+function arguments, such as:
+
+  controllers/api.php:
+
+    function index($version, $format, $module=NULL, $method=NULL) {...}
+
+  config/routes.php:
+
+    $route['api/v(:num)/(:any)/(:any)/(:any)'] = "api/index/$1/$2/$3/$4";
+    $route['api/v(:num)/(:any)/(:any)'] = "api/index/$1/$2/$3";
+    $route['api/v(:num)/(:any)'] = "api/index/$1/$2";
+
+Once your controller has the four arguments, it can dispatch the API call to
+the APIGen library with a single call:
+
+  $this->auto_api->dispatch($format, $version, $module, $method);
+
+Now you need to create your API controllers in the "api_root" you passed when
+loading APIGen.  The controllers must be named and stored in a hierarchy with
+the API versions as top-level directories with your controllers ("modules").
+To create a module "foo", you would create the following file:
+
+  /path/to/api/v1/foo.php:
+
+    <?php
+    class Api_foo extends Controller {
+      public function bar() {
+        return array("string", TRUE, $this);
+      }
+    }
+
+Note that the class name is actually "Api_foo" to avoid collisions with other
+classes or controllers in your application.  The "bar" method would then be
+accessed with the following URI:
+
+  http://your.domain/api/v1/foo/bar
+
+To add a new version of the API, you can simply copy the /path/to/api/1
+directory to /path/to/api/2 and start modifying the version 2 controllers, and
+then access the new "bar" method via:
+
+  http://your.domain/api/v2/foo/bar
+
+
+Limitations
+===========
+
+Currently, the library is designed around the concept of having a single set of
+unnested API modules, each with a set of methods, that make up the API urls.
+There is currently no way to use API hierarchies deeper than the API version.
+
+
+Bug Reports
+===========
+
+If you find any problems with this project, please do not hesitate to visit my
+bugtracker at http://leetcode.net/mantis/ and submit a report.
+
